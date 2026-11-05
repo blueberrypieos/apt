@@ -1,0 +1,26 @@
+Description: connect: the timeout's microseconds as suseconds_t
+ Darwin's suseconds_t is int, and narrowing the int64 expression in the
+ designated initializer is an error.
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/methods/connect.cc
++++ b/methods/connect.cc
+@@ -11,6 +11,7 @@
+ 
+    ##################################################################### */
+ 									/*}}}*/
++// Modified 2026-10-29: the timeout's microseconds as suseconds_t (GPL-2 section 2(a)).
+ // Include Files							/*{{{*/
+ #include <config.h>
+ 
+@@ -277,7 +278,7 @@ static ResultState WaitAndCheckErrors(st
+    struct timeval tv = {
+       // Split our millisecond timeout into seconds and microseconds
+       .tv_sec = TimeoutMsec / 1000,
+-      .tv_usec = (TimeoutMsec % 1000) * 1000,
++      .tv_usec = static_cast<suseconds_t>((TimeoutMsec % 1000) * 1000),
+    };
+ 
+    // We will return once we have no more connections, a time out, or

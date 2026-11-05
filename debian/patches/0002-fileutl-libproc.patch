@@ -1,0 +1,73 @@
+Description: fileutl: process names and open descriptors from libproc
+ Darwin has no /proc: GetProcessName() asks proc_name(), and ExecFork()
+ lists the descriptors to close with proc_pidinfo(PROC_PIDLISTFDS).
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/apt-pkg/contrib/fileutl.cc
++++ b/apt-pkg/contrib/fileutl.cc
+@@ -24,6 +24,7 @@
+ 
+    ##################################################################### */
+ 									/*}}}*/
++// Modified 2026-10-29: process names and open descriptors from libproc (GPL-2 section 2(a)).
+ // Include Files							/*{{{*/
+ #include <config.h>
+ 
+@@ -88,6 +89,9 @@
+ #include <linux/close_range.h>
+ #include <sys/prctl.h>
+ #endif
++#ifdef __APPLE__
++#include <libproc.h>
++#endif
+ 
+ #include <apti18n.h>
+ 									/*}}}*/
+@@ -227,6 +231,15 @@ bool RemoveFile(char const * const Funct
+ 
+ static std::string GetProcessName(int pid)
+ {
++#ifdef __APPLE__
++   // Use proc_name() instead.
++   int const err = errno;
++   char name[2 * MAXCOMLEN + 1] = "";
++   if (proc_name(pid, name, sizeof(name)) <= 0)
++      name[0] = '\0';
++   errno = err;
++   return name;
++#else
+    struct HideError
+    {
+       int err;
+@@ -247,6 +260,7 @@ static std::string GetProcessName(int pi
+ 	 return line.substr(6);
+    }
+    return "";
++#endif
+ }
+ int GetLock(string const &File,bool Errors)
+ {
+@@ -941,6 +955,21 @@ pid_t ExecFork(std::set<int> KeepFDs)
+ 	 for (auto keep : KeepFDs)
+ 	    safeSetCloseExec(keep, false);
+       }
++#ifdef __APPLE__
++      // Use proc_pidinfo() instead.
++      else if (int size = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nullptr, 0); size > 0)
++      {
++	 std::vector<struct proc_fdinfo> fds(size / PROC_PIDLISTFD_SIZE + 16);
++	 size = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, fds.data(), fds.size() * PROC_PIDLISTFD_SIZE);
++	 size_t const count = size > 0 ? size / PROC_PIDLISTFD_SIZE : 0;
++	 for (size_t i = 0; i < count; ++i)
++	 {
++	    int fd = fds[i].proc_fd;
++	    if (fd >= 3 && KeepFDs.find(fd) == KeepFDs.end())
++	       safeSetCloseExec(fd, true);
++	 }
++      }
++#endif
+       else if (DIR *dir = opendir("/proc/self/fd"))
+       {
+ 	 struct dirent *ent;

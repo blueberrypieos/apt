@@ -1,0 +1,41 @@
+Description: srvrec: getservbyport() on Darwin
+ Darwin has no getservbyport_r(), and declares the BIND 8 resolver names
+ that srvrec.cc uses only with BIND_8_COMPAT.
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/apt-pkg/contrib/srvrec.cc
++++ b/apt-pkg/contrib/srvrec.cc
+@@ -6,12 +6,16 @@
+ 
+    ##################################################################### */
+ 									/*}}}*/
++// Modified 2026-10-29: getservbyport() on Darwin (GPL-2 section 2(a)).
+ #include <config.h>
+ 
+ #include <netdb.h>
+ 
+ #include <ctime>
+ #include <arpa/inet.h>
++#ifdef __APPLE__
++#define BIND_8_COMPAT
++#endif
+ #include <arpa/nameser.h>
+ #include <netinet/in.h>
+ #include <resolv.h>
+@@ -50,7 +54,14 @@ bool GetSrvRecords(std::string host, int
+    struct servent *s_ent = nullptr;
+    std::array<char, 1024> buf;
+ 
++#ifdef __APPLE__
++   (void)s_ent_buf;
++   (void)buf;
++   s_ent = getservbyport(htons(port), "tcp");
++   res = 0;
++#else
+    res = getservbyport_r(htons(port), "tcp", &s_ent_buf, buf.data(), buf.size(), &s_ent);
++#endif
+    if (res != 0 || s_ent == nullptr)
+       return false;
+ 

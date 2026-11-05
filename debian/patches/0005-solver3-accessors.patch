@@ -1,0 +1,71 @@
+Description: solver3: define the State accessors after the class
+ Clang with libc++ rejects the constexpr package and version accessors
+ inside the class, where State is not yet complete; they are defined after
+ it, as the Var accessors already are.
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/apt-pkg/solver3.h
++++ b/apt-pkg/solver3.h
+@@ -6,6 +6,7 @@
+  *
+  * SPDX-License-Identifier: GPL-2.0+
+  */
++/* Modified 2026-10-29: the State accessors are defined after the class (GPL-2 section 2(a)). */
+ 
+ #include <cassert>
+ #include <memory>
+@@ -307,24 +308,12 @@ class Solver
+    ContiguousCacheMap<pkgCache::Version, State> verStates;
+ 
+    // \brief Helper function for safe access to package state.
+-   constexpr State &operator[](const pkgCache::Package *P) noexcept
+-   {
+-      return pkgStates[P];
+-   }
+-   constexpr const State &operator[](const pkgCache::Package *P) const noexcept
+-   {
+-      return pkgStates[P];
+-   }
++   constexpr State &operator[](const pkgCache::Package *P) noexcept;
++   constexpr const State &operator[](const pkgCache::Package *P) const noexcept;
+ 
+    // \brief Helper function for safe access to version state.
+-   constexpr State &operator[](const pkgCache::Version *V) noexcept
+-   {
+-      return verStates[V];
+-   }
+-   constexpr const State &operator[](const pkgCache::Version *V) const noexcept
+-   {
+-      return verStates[V];
+-   }
++   constexpr State &operator[](const pkgCache::Version *V) noexcept;
++   constexpr const State &operator[](const pkgCache::Version *V) const noexcept;
+    // \brief Helper function for safe access to either state.
+    constexpr State &operator[](Var r) noexcept;
+    constexpr const State &operator[](Var r) const noexcept;
+@@ -583,6 +572,23 @@ struct APT::Solver::Solver::Trail
+    std::optional<Work> work;
+ };
+ 
++constexpr APT::Solver::Solver::State &APT::Solver::Solver::operator[](const pkgCache::Package *P) noexcept
++{
++   return pkgStates[P];
++}
++constexpr const APT::Solver::Solver::State &APT::Solver::Solver::operator[](const pkgCache::Package *P) const noexcept
++{
++   return pkgStates[P];
++}
++constexpr APT::Solver::Solver::State &APT::Solver::Solver::operator[](const pkgCache::Version *V) noexcept
++{
++   return verStates[V];
++}
++constexpr const APT::Solver::Solver::State &APT::Solver::Solver::operator[](const pkgCache::Version *V) const noexcept
++{
++   return verStates[V];
++}
++
+ constexpr APT::Solver::Solver::State &APT::Solver::Solver::operator[](APT::Solver::Var r) noexcept
+ {
+    if (auto P = r.Pkg())

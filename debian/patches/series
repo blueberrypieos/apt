@@ -1,0 +1,8 @@
+0001-cmake-darwin.patch
+0002-fileutl-libproc.patch
+0003-srvrec-getservbyport.patch
+0004-dpkgpm-pty-order.patch
+0005-solver3-accessors.patch
+0006-statvfs-frsize.patch
+0007-connect-suseconds.patch
+0008-connect-tls-verify-reason.patch

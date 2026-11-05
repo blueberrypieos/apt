@@ -1,0 +1,57 @@
+Description: dpkgpm: open the pty slave before setting the master up
+ Darwin fails with ENOTTY when the master's window size and attributes are
+ set before the slave is opened, so the slave is opened first. Linux and
+ kFreeBSD keep it open the whole time, as before.
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/apt-pkg/deb/dpkgpm.cc
++++ b/apt-pkg/deb/dpkgpm.cc
+@@ -6,6 +6,7 @@
+ 
+    ##################################################################### */
+ 									/*}}}*/
++// Modified 2026-10-29: the pty slave is opened before the master is set up (GPL-2 section 2(a)).
+ // Includes								/*{{{*/
+ #include <config.h>
+ 
+@@ -1256,7 +1257,20 @@ void pkgDPkgPM::StartPtyMagic()						/*{
+ 	    _error->Errno("strdup", "Copying name %s for slave of master fd %d failed!", slave_name, d->master);
+ 	 else if (grantpt(d->master) == -1)
+ 	    _error->Errno("grantpt", "Granting access to slave %s based on master fd %d failed!", slave_name, d->master);
+-	 else if (tcgetattr(STDIN_FILENO, &d->tt) == 0)
++	 else
++	 {
++	    /* on linux, closing (and later reopening) all references to the slave
++	       makes the slave a death end, so we open it here to have one open all
++	       the time. We could use this fd in SetupSlavePtyMagic() for linux, but
++	       on kfreebsd we get an incorrect ("step like") output then while it has
++	       no problem with closing all references… so to avoid platform specific
++	       code here we combine both and be happy once more.
++	       Darwin errors with ENOTTY if the master's window size and
++	       attributes are set before the slave is opened. */
++	    d->protect_slave_from_dying = open(d->slave, O_RDWR | O_CLOEXEC | O_NOCTTY);
++	 }
++	 if (d->slave != NULL && _error->PendingError() == false &&
++	     tcgetattr(STDIN_FILENO, &d->tt) == 0)
+ 	 {
+ 	    d->tt_is_valid = true;
+ 	    struct termios raw_tt;
+@@ -1287,16 +1301,6 @@ void pkgDPkgPM::StartPtyMagic()						/*{
+ 	    sigprocmask(SIG_SETMASK, &d->original_sigmask, NULL);
+ 
+ 	 }
+-	 if (d->slave != NULL)
+-	 {
+-	    /* on linux, closing (and later reopening) all references to the slave
+-	       makes the slave a death end, so we open it here to have one open all
+-	       the time. We could use this fd in SetupSlavePtyMagic() for linux, but
+-	       on kfreebsd we get an incorrect ("step like") output then while it has
+-	       no problem with closing all references… so to avoid platform specific
+-	       code here we combine both and be happy once more */
+-	    d->protect_slave_from_dying = open(d->slave, O_RDWR | O_CLOEXEC | O_NOCTTY);
+-	 }
+       }
+    }
+ 

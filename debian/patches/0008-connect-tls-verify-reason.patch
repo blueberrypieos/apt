@@ -1,0 +1,31 @@
+Description: connect: say why the TLS certificate was not verified
+ When SSL_connect fails with a certificate verification error, the message
+ includes X509_verify_cert_error_string() of the result.
+Author: Maxwell <maxwell@blueberrypieos.com>
+Forwarded: no
+Last-Update: 2026-10-29
+
+--- a/methods/connect.cc
++++ b/methods/connect.cc
+@@ -12,6 +12,7 @@
+    ##################################################################### */
+ 									/*}}}*/
+ // Modified 2026-10-29: the timeout's microseconds as suseconds_t (GPL-2 section 2(a)).
++// Modified 2026-10-29: the reason the TLS certificate was not verified (GPL-2 section 2(a)).
+ // Include Files							/*{{{*/
+ #include <config.h>
+ 
+@@ -1079,7 +1080,12 @@ ResultState UnwrapTLS(std::string const
+ 	 }
+ 	 break;
+       default:
+-	 _error->Error("SSL connection failed: %s / %s", ssl_strerr(), strerror(errno));
++	 // Include the reason SSL_connect failed.
++	 if (auto const verify = SSL_get_verify_result(tlsFd->ssl); verify != X509_V_OK)
++	    _error->Error("SSL connection failed: %s (%s) / %s", ssl_strerr(),
++			  X509_verify_cert_error_string(verify), strerror(errno));
++	 else
++	    _error->Error("SSL connection failed: %s / %s", ssl_strerr(), strerror(errno));
+ 	 return ResultState::TRANSIENT_ERROR;
+       }
+    }
