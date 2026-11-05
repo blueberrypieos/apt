@@ -1,0 +1,2 @@
+superfluous-file-pattern debian/build/obj/dest/usr/lib/libapt-pkg.7.0.0.dylib [debian/copyright:*]
+superfluous-file-pattern debian/build/obj/dest/usr/lib/apt/methods/http [debian/copyright:*]
