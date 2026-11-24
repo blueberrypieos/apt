@@ -3,7 +3,7 @@ Description: connect: say why the TLS certificate was not verified
  includes X509_verify_cert_error_string() of the result.
 Author: Maxwell <maxwell@blueberrypieos.com>
 Forwarded: no
-Last-Update: 2026-10-29
+Last-Update: 2026-11-11
 
 --- a/methods/connect.cc
 +++ b/methods/connect.cc
@@ -15,12 +15,11 @@ Last-Update: 2026-10-29
  // Include Files							/*{{{*/
  #include <config.h>
  
-@@ -1079,7 +1080,12 @@ ResultState UnwrapTLS(std::string const
+@@ -1079,7 +1080,11 @@ ResultState UnwrapTLS(std::string const
  	 }
  	 break;
        default:
 -	 _error->Error("SSL connection failed: %s / %s", ssl_strerr(), strerror(errno));
-+	 // Include the reason SSL_connect failed.
 +	 if (auto const verify = SSL_get_verify_result(tlsFd->ssl); verify != X509_V_OK)
 +	    _error->Error("SSL connection failed: %s (%s) / %s", ssl_strerr(),
 +			  X509_verify_cert_error_string(verify), strerror(errno));

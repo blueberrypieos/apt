@@ -1,3 +1,9 @@
+apt (3.3.3+ds1-3) blueberry-pie-os; urgency=medium
+
+  * Build-Depend on pietoolchain-host and pietoolchain-sdk.
+
+ -- Maxwell <maxwell@blueberrypieos.com>  Wed, 11 Nov 2026 23:04:38 +0000
+
 apt (3.3.3+ds1-2) blueberry-pie-os; urgency=medium
 
   * apt 3.3.3

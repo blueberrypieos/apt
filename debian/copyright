@@ -113,9 +113,36 @@ Files: debian/*
 Copyright: 2026 The Blueberry Pie OS Authors
 License: BSD-2-Clause
 
-Files: debian/patches/*
-Copyright: 2026 The Blueberry Pie OS Authors
+Files: debian/patches/0001-cmake-darwin.patch
+ debian/patches/0003-srvrec-getservbyport.patch
+ debian/patches/0004-dpkgpm-pty-order.patch
+ debian/patches/0006-statvfs-frsize.patch
+Copyright: 1997-1999 Jason Gunthorpe and others
+ 2018, 2019 Canonical Ltd
+ 2009, 2010, 2016 Software Freedom Conservancy
+ 1998 Manoj Srivastava
+ 2014 Anthony Towns
+ 2026 Julian Andres Klode
+ 2026 The Blueberry Pie OS Authors
 License: GPL-2.0-or-later
+
+Files: debian/patches/0002-fileutl-libproc.patch
+Copyright: 1997-1999 Jason Gunthorpe and others
+ 2026 The Blueberry Pie OS Authors
+License: public-domain AND GPL-2.0-or-later
+
+Files: debian/patches/0005-solver3-accessors.patch
+Copyright: 2023 Julian Andres Klode
+ 2023 Canonical Ltd
+ 2026 The Blueberry Pie OS Authors
+License: GPL-2.0-or-later
+
+Files: debian/patches/0007-connect-suseconds.patch
+ debian/patches/0008-connect-tls-verify-reason.patch
+Copyright: 1996-2023 Daniel Stenberg, <daniel@haxx.se>, and many contributors
+ Jason Gunthorpe and others
+ 2026 The Blueberry Pie OS Authors
+License: public-domain AND GPL-2.0-or-later AND curl
 
 Files: methods/connect.cc
 Copyright: 1996-2023 Daniel Stenberg, <daniel@haxx.se>, and many contributors
